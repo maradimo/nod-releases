@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nod — you nod, it's done</title>
+<meta name="description" content="Nod is a Mac menu-bar app that guesses what you're trying to do and does it when you tap ⌘. Everything it reads stays on your Mac.">
+<meta property="og:title" content="Nod — you nod, it's done">
+<meta property="og:description" content="A Mac menu-bar app that guesses what you're trying to do and does it when you tap ⌘.">
+<meta property="og:image" content="https://maradimo.github.io/nod-releases/assets/card.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231c1a24'/%3E%3Ctext x='32' y='42' font-size='22' text-anchor='middle' fill='%23c7b8ff' font-family='-apple-system,Helvetica,sans-serif' font-weight='700'%3E%28•ᴗ•%29%3C/text%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #15131b; --card: #1c1a24; --card-2: #24212e; --ink: #f2f0f7; --ink-2: #b9b4c8; --ink-3: #7f7991;
+    --lavender: #c7b8ff; --mint: #9eedc7; --butter: #ffe68c; --peach: #ffc79a; --line: rgba(255,255,255,.08);
+    --radius: 18px; --max: 1040px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 17px/1.55 -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, Segoe UI, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: var(--lavender); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .wrap { max-width: var(--max); margin: 0 auto; padding: 0 20px; }
+  header { position: sticky; top: 0; z-index: 10; backdrop-filter: saturate(140%) blur(14px); background: rgba(21,19,27,.78); border-bottom: 1px solid var(--line); }
+  header .wrap { display: flex; align-items: center; justify-content: space-between; height: 60px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: .2px; color: var(--ink); }
+  .face { font-weight: 800; color: var(--mint); letter-spacing: -1px; }
+  nav a { color: var(--ink-2); margin-left: 22px; font-size: 15px; }
+  nav a:hover { color: var(--ink); text-decoration: none; }
+  .btn { display: inline-flex; align-items: center; gap: 10px; background: var(--lavender); color: #1a1530; font-weight: 700; padding: 13px 20px; border-radius: 14px; border: 0; cursor: pointer; font-size: 16px; transition: transform .12s ease, box-shadow .12s ease; box-shadow: 0 8px 28px rgba(199,184,255,.18); }
+  .btn:hover { transform: translateY(-1px); text-decoration: none; box-shadow: 0 12px 34px rgba(199,184,255,.26); }
+  .btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); box-shadow: none; }
+  .btn.small { padding: 9px 14px; font-size: 14px; border-radius: 11px; }
+  kbd { font: 600 .85em/1 ui-monospace, SF Mono, Menlo, monospace; background: rgba(255,255,255,.08); border: 1px solid var(--line); border-bottom-width: 2px; padding: 3px 7px; border-radius: 7px; color: var(--lavender); white-space: nowrap; }
+
+  .hero { padding: 84px 0 40px; display: grid; grid-template-columns: 1.05fr 1fr; gap: 48px; align-items: center; }
+  .hero h1 { font-size: clamp(40px, 5.6vw, 64px); line-height: 1.02; letter-spacing: -1.6px; margin: 0 0 18px; font-weight: 800; }
+  .hero h1 em { font-style: normal; color: var(--mint); }
+  .hero p.lead { font-size: 20px; color: var(--ink-2); margin: 0 0 28px; max-width: 520px; }
+  .cta { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .meta { color: var(--ink-3); font-size: 14px; margin-top: 14px; }
+  .meta b { color: var(--ink-2); font-weight: 600; }
+  .shot { position: relative; }
+  .shot img { width: 100%; height: auto; border-radius: 22px; box-shadow: 0 30px 80px rgba(0,0,0,.55), 0 0 0 1px var(--line); display: block; }
+  .shot .tag { position: absolute; left: 18px; bottom: -14px; background: var(--card-2); border: 1px solid var(--line); border-radius: 999px; padding: 7px 13px; font-size: 13px; color: var(--ink-2); }
+  .shot.second { margin-top: 26px; transform: rotate(-1.2deg) translateX(14px); opacity: .9; }
+
+  section { padding: 56px 0; border-top: 1px solid var(--line); }
+  h2 { font-size: 30px; letter-spacing: -.6px; margin: 0 0 8px; font-weight: 800; }
+  .sub { color: var(--ink-2); margin: 0 0 30px; max-width: 640px; }
+  .grid { display: grid; gap: 16px; }
+  .grid.three { grid-template-columns: repeat(3, 1fr); }
+  .grid.two { grid-template-columns: repeat(2, 1fr); }
+  .tile { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; }
+  .tile h3 { margin: 0 0 8px; font-size: 17px; }
+  .tile p { margin: 0; color: var(--ink-2); font-size: 15px; }
+  .tile .n { display: inline-block; width: 28px; height: 28px; border-radius: 9px; background: rgba(199,184,255,.14); color: var(--lavender); font-weight: 800; text-align: center; line-height: 28px; margin-bottom: 12px; font-size: 14px; }
+
+  .keys { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+  .key { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 18px 16px; text-align: center; }
+  .key .w { font-weight: 800; font-size: 19px; margin-bottom: 4px; }
+  .key .k { color: var(--lavender); font-weight: 700; font-size: 14px; }
+  .key .d { color: var(--ink-3); font-size: 13px; margin-top: 8px; }
+
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  .actions span { background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 7px 13px; font-size: 14px; color: var(--ink-2); }
+  .actions span b { color: var(--ink); font-weight: 600; }
+
+  video { width: 100%; border-radius: var(--radius); border: 1px solid var(--line); background: #000; display: block; }
+  .videos { display: grid; grid-template-columns: 1.6fr 1fr; gap: 16px; align-items: start; }
+  .videos figcaption { color: var(--ink-3); font-size: 13px; margin-top: 8px; }
+
+  .privacy li { margin: 6px 0; color: var(--ink-2); }
+  .privacy li b { color: var(--ink); font-weight: 600; }
+  ol.steps { padding-left: 22px; }
+  ol.steps li { margin: 10px 0; color: var(--ink-2); }
+  ol.steps li b { color: var(--ink); font-weight: 600; }
+  .note { background: rgba(255,230,140,.08); border: 1px solid rgba(255,230,140,.25); border-radius: 14px; padding: 14px 16px; font-size: 15px; color: var(--ink-2); }
+  .note b { color: var(--butter); }
+  footer { border-top: 1px solid var(--line); padding: 34px 0 48px; color: var(--ink-3); font-size: 14px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+  footer a { color: var(--ink-2); margin-right: 16px; }
+
+  @media (max-width: 880px) {
+    .hero { grid-template-columns: 1fr; padding-top: 48px; gap: 30px; }
+    .grid.three, .grid.two, .videos { grid-template-columns: 1fr; }
+    .keys { grid-template-columns: repeat(2, 1fr); }
+    nav a:not(:last-child) { display: none; }
+    .shot.second { transform: none; margin-top: 16px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <a class="brand" href="#"><span class="face">(•ᴗ•)✧</span> Nod</a>
+    <nav>
+      <a href="#how">How it works</a>
+      <a href="#keys">Keys</a>
+      <a href="#privacy">Privacy</a>
+      <a href="#install">Install</a>
+      <a class="btn small" id="nav-download" href="https://github.com/maradimo/nod-releases/releases/latest/download/Nod.zip">Download</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="hero">
+    <div>
+      <h1>You nod.<br><em>It's done.</em></h1>
+      <p class="lead">A little face in your menu bar that notices what you're trying to do, offers the next step in one line, and does it when you tap <kbd>⌘</kbd>. No prompt box. No chat.</p>
+      <div class="cta">
+        <a class="btn" id="download" href="https://github.com/maradimo/nod-releases/releases/latest/download/Nod.zip">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+          Download for Mac
+        </a>
+        <a class="btn ghost" href="#install">Install steps</a>
+      </div>
+      <div class="meta"><span id="version">Latest build</span> · macOS 14 or newer · Apple Silicon · bring your own Claude API key</div>
+    </div>
+    <div>
+      <div class="shot"><img src="assets/card.png" alt="The Nod card asking: should I reply to Denis: Tuesday 2pm works? with Yes (tap ⌘), Next (tap ⌥), More (hold ⌘), Tell me (hold ⌥)"><span class="tag">one line, one key</span></div>
+      <div class="shot second"><img src="assets/card-next.png" alt="After tapping ⌥ the card shows the next idea with a 2/5 counter"></div>
+    </div>
+  </div>
+
+  <section id="how">
+    <h2>How it works</h2>
+    <p class="sub">Nod reads the room on your Mac, says one line, and acts the moment you agree.</p>
+    <div class="grid three">
+      <div class="tile"><span class="n">1</span><h3>It reads the room, on your Mac</h3><p>Front app, window title, your selection, the text on screen (OCR'd locally), the clipboard, your last few app switches, your calendar. Passwords and denylisted apps are never read. Everything is redacted before any of it leaves.</p></div>
+      <div class="tile"><span class="n">2</span><h3>It says one line</h3><p>A first guess appears instantly, a specific one in under a second, the full one with alternatives and a ready action about a second later. Under the question it tells you exactly what yes will do.</p></div>
+      <div class="tile"><span class="n">3</span><h3>You nod. It does the thing</h3><p>Tap ⌘ and the draft is pasted, the reminder set, the event added, the brief handed to ChatGPT or Claude. The output is pre-written while you decide, so yes is instant.</p></div>
+    </div>
+  </section>
+
+  <section id="keys">
+    <h2>Five keys. No mouse.</h2>
+    <p class="sub">Every button on the card shows its key underneath. All of them can be re-recorded in Settings.</p>
+    <div class="keys">
+      <div class="key"><div class="w">Yes</div><div class="k">tap ⌘</div><div class="d">press ⌘ once, alone</div></div>
+      <div class="key"><div class="w">Next</div><div class="k">tap ⌥</div><div class="d">the next-best idea, in place</div></div>
+      <div class="key"><div class="w">More</div><div class="k">hold ⌘</div><div class="d">all ideas; keep holding, tap ⌥ to step, let go to pick</div></div>
+      <div class="key"><div class="w">Tell me</div><div class="k">hold ⌥</div><div class="d">talk while you hold, or type; corrects the suggestion</div></div>
+      <div class="key"><div class="w">Close</div><div class="k">esc</div><div class="d">from any app</div></div>
+    </div>
+    <p class="sub" style="margin-top:22px">Or say <b style="color:var(--ink)">"hey Nod, remind me at three"</b>. Speech is recognised on the Mac; audio is never stored or sent anywhere.</p>
+  </section>
+
+  <section id="does">
+    <h2>What it can do</h2>
+    <p class="sub">Each suggestion comes with a ready action. These are the ones built in today.</p>
+    <div class="actions">
+      <span><b>Draft</b> and paste a reply</span><span><b>Rewrite</b> the selection in place</span><span><b>Email</b> ready to send</span><span><b>Message</b> in Slack or iMessage</span>
+      <span><b>Reminder</b></span><span><b>Calendar event</b> with free-slot lookup</span><span><b>Note</b></span><span><b>Open</b> an app, a page, a set of tabs</span>
+      <span><b>Hand off</b> to ChatGPT, Claude or Claude Code with a full brief</span><span><b>Paste</b> the screenshot you just took</span><span><b>Gather</b> everything about a person or topic</span>
+      <span><b>Answer</b> a question from what's on screen</span><span><b>Run</b> a Shortcut</span><span><b>Arrange</b> windows</span><span><b>Timer</b></span><span><b>Plan</b>: several steps, one nod each</span>
+      <span><b>Supervise</b> a coding agent in your terminal</span><span><b>Take over</b> mouse and keyboard for the rest (asks first)</span>
+    </div>
+  </section>
+
+  <section id="video">
+    <h2>See it</h2>
+    <div class="videos">
+      <figure style="margin:0"><video controls playsinline preload="metadata" src="assets/demo.mp4"></video><figcaption>Two minutes: a day with Nod.</figcaption></figure>
+      <figure style="margin:0"><video controls playsinline muted loop preload="metadata" src="assets/reel.mp4"></video><figcaption>How it was built, in fifteen seconds.</figcaption></figure>
+    </div>
+  </section>
+
+  <section id="privacy" class="privacy">
+    <h2>What leaves your Mac</h2>
+    <p class="sub">Only redacted text, only to the Claude API, only with your own key. You can read every payload.</p>
+    <div class="grid two">
+      <div class="tile"><h3>Stays on the Mac</h3><ul style="margin:0;padding-left:18px"><li>Screenshots and OCR (Apple Vision, local)</li><li>Audio for "hey Nod" (on-device recognition)</li><li>Your API key (macOS Keychain)</li><li>The log, your labels, memory, journal (Application Support)</li><li>Anything from password fields or denylisted apps: never collected</li></ul></div>
+      <div class="tile"><h3>Goes to the Claude API</h3><ul style="margin:0;padding-left:18px"><li>Redacted text from the front window, selection, clipboard</li><li>Card numbers, SSNs, keys and passwords masked first</li><li>Never an image, except inside computer-use after you say yes</li><li><b>Menu bar › "What left this Mac today…"</b> shows every payload sent</li><li>Pause stops all collection</li></ul></div>
+    </div>
+  </section>
+
+  <section id="install">
+    <h2>Install</h2>
+    <p class="sub">Two minutes. You'll need an Anthropic API key from <a href="https://console.anthropic.com/" target="_blank" rel="noopener">console.anthropic.com</a>.</p>
+    <ol class="steps">
+      <li><b>Download</b> and unzip, then drag <b>Nod.app</b> into Applications.</li>
+      <li><b>Open it once with a right-click › Open.</b> If macOS says it cannot verify the developer: System Settings › Privacy & Security › scroll down › <b>Open Anyway</b>, then open Nod again.</li>
+      <li><b>Paste your API key</b> in the onboarding window. It goes into your Keychain and nowhere else.</li>
+      <li><b>Grant permissions</b>: Accessibility and Screen Recording (to read the front window). Microphone and Speech Recognition only if you want to talk to it.</li>
+      <li><b>Switch apps.</b> The pill in the corner will offer a line. Tap ⌘.</li>
+    </ol>
+    <div class="note"><b>Updates are automatic.</b> Nod checks this release feed on launch and every six hours, verifies the signature of a newer build, and offers "Restart to update" in its menu. <b>Why the "Open Anyway" step?</b> The current build is signed but not yet notarized by Apple. That changes when the Developer ID certificate lands; installed copies will simply update.</div>
+  </section>
+</main>
+
+<footer class="wrap">
+  <div>Nod · built by <a href="https://github.com/maradimo" target="_blank" rel="noopener">Mara Dimofte</a></div>
+  <div><a href="https://github.com/maradimo/nod-releases/releases" target="_blank" rel="noopener">All releases</a><a href="https://github.com/maradimo/nod-releases/blob/main/INSTALL.md" target="_blank" rel="noopener">Install guide</a><a href="mailto:mara.dimofte123@gmail.com">Contact</a></div>
+</footer>
+
+<script>
+  // Show the version and date of the latest release; the download link itself is stable.
+  fetch('https://api.github.com/repos/maradimo/nod-releases/releases/latest', { headers: { Accept: 'application/vnd.github+json' } })
+    .then(r => r.ok ? r.json() : null)
+    .then(j => {
+      if (!j) return;
+      const d = j.published_at ? new Date(j.published_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+      document.getElementById('version').innerHTML = '<b>' + (j.name || j.tag_name) + '</b>' + (d ? ' · ' + d : '');
+    }).catch(() => {});
+</script>
+</body>
+</html>
