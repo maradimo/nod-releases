@@ -134,13 +134,14 @@
   </section>
 
   <section id="keys">
-    <h2>Five keys. No mouse.</h2>
+    <h2>Six keys. No mouse.</h2>
     <p class="sub">Every button on the card shows its key underneath. All of them can be re-recorded in Settings.</p>
     <div class="keys">
       <div class="key"><div class="w">Yes</div><div class="k">tap ⌘</div><div class="d">press ⌘ once, alone</div></div>
       <div class="key"><div class="w">Next</div><div class="k">tap ⌥</div><div class="d">the next-best idea, in place</div></div>
       <div class="key"><div class="w">More</div><div class="k">hold ⌘</div><div class="d">all ideas; keep holding, tap ⌥ to step, let go to pick</div></div>
       <div class="key"><div class="w">Tell me</div><div class="k">hold ⌥</div><div class="d">talk while you hold, or type; corrects the suggestion</div></div>
+      <div class="key"><div class="w">Dictate</div><div class="k">hold fn</div><div class="d">in any text field: talk, let go, cleaned-up text lands at your cursor</div></div>
       <div class="key"><div class="w">Close</div><div class="k">esc</div><div class="d">from any app</div></div>
     </div>
     <p class="sub" style="margin-top:22px">Or say <b style="color:var(--ink)">"hey Nod, remind me at three"</b>. Speech is recognised on the Mac; audio is never stored or sent anywhere.</p>
@@ -170,8 +171,8 @@
     <h2>What leaves your Mac</h2>
     <p class="sub">Only redacted text, only to the Claude API, only with your own key. You can read every payload.</p>
     <div class="grid two">
-      <div class="tile"><h3>Stays on the Mac</h3><ul style="margin:0;padding-left:18px"><li>Screenshots and OCR (Apple Vision, local)</li><li>Audio for "hey Nod" (on-device recognition)</li><li>Your API key (macOS Keychain)</li><li>The log, your labels, memory, journal (Application Support)</li><li>Anything from password fields or denylisted apps: never collected</li></ul></div>
-      <div class="tile"><h3>Goes to the Claude API</h3><ul style="margin:0;padding-left:18px"><li>Redacted text from the front window, selection, clipboard</li><li>Card numbers, SSNs, keys and passwords masked first</li><li>Never an image, except inside computer-use after you say yes</li><li><b>Menu bar › "What left this Mac today…"</b> shows every payload sent</li><li>Pause stops all collection</li></ul></div>
+      <div class="tile"><h3>Stays on the Mac</h3><ul style="margin:0;padding-left:18px"><li>Screenshots and OCR (Apple Vision, local)</li><li>Audio for dictation and "hey Nod" (Apple's on-device recognition; never stored)</li><li>Your API key (macOS Keychain)</li><li>The log, your labels, memory, journal (Application Support)</li><li>Anything from password fields or denylisted apps: never collected</li></ul></div>
+      <div class="tile"><h3>Goes to the Claude API</h3><ul style="margin:0;padding-left:18px"><li>Redacted text from the front window, selection, clipboard</li><li>The transcript of a dictation, for clean-up (or keep it on the Mac in Settings)</li><li>Card numbers, SSNs, keys and passwords masked first</li><li>Never an image, except inside computer-use after you say yes</li><li><b>Menu bar › "What left this Mac today…"</b> shows every payload sent</li><li>Pause stops all collection</li></ul></div>
     </div>
   </section>
 
