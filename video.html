@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nod video</title>
+<style>
+  :root { --ink:#111214; --ink-2:#4b4f56; --ink-3:#8a8f98; --line:#e6e8eb; --bg:#fff; --bg-2:#f6f7f8; --accent:#19a36b; --accent-ink:#0d7a4f; --accent-soft:#e6f6ef; --ease:cubic-bezier(.2,.85,.2,1); }
+  html, body { margin:0; height:100%; background:#000; overflow:hidden; cursor:none; }
+  body { font: 17px/1.5 -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, "Segoe UI", Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; color: var(--ink); }
+  #stage { position:absolute; left:50%; top:50%; width:1920px; height:1080px; transform-origin:0 0; background:var(--bg); overflow:hidden; }
+  .scene { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; opacity:0; transition: opacity .25s var(--ease); padding: 0 160px; text-align:center; }
+  .scene.on { opacity:1; }
+  .scene.off { opacity:0; }
+  .t { opacity:0; transform: translateY(12px); transition: opacity .32s var(--ease), transform .32s var(--ease); }
+  .on .t.in { opacity:1; transform:none; }
+  h1 { font-size: 92px; line-height:1.02; letter-spacing:-.035em; font-weight:680; margin:0; max-width: 18ch; }
+  h2 { font-size: 64px; line-height:1.06; letter-spacing:-.03em; font-weight:650; margin:0; max-width: 20ch; }
+  .sub { font-size: 34px; color: var(--ink-2); margin-top: 28px; max-width: 34ch; }
+  .kicker { font-size: 22px; letter-spacing:.1em; text-transform:uppercase; color: var(--accent-ink); font-weight:600; margin-bottom: 26px; }
+  .mark { display:flex; align-items:center; gap: 22px; font-size: 120px; font-weight: 700; letter-spacing:-.04em; }
+  .mark .face { font-size: 44px; font-weight: 600; letter-spacing: .02em; color: var(--accent-ink); background: var(--accent-soft); border-radius: 999px; padding: 14px 26px; line-height: 1; }
+  .row { display:flex; gap: 28px; margin-top: 56px; }
+  .chip { border:1px solid var(--line); border-radius: 22px; padding: 26px 36px; font-size: 30px; display:flex; align-items:center; gap: 18px; background:#fff; }
+  .chip .n { width: 44px; height:44px; border-radius:50%; background: var(--accent-soft); color: var(--accent-ink); display:grid; place-items:center; font-weight:650; font-size: 22px; }
+  kbd { font: 28px/1 ui-monospace, SFMono-Regular, Menlo, monospace; border:1px solid var(--line); border-bottom-width:3px; border-radius:10px; padding: 6px 12px; background: var(--bg-2); }
+
+  /* scene 1: the long prompt */
+  .composer-big { width: 1200px; border:1px solid var(--line); border-radius: 22px; padding: 30px 36px; font-size: 32px; text-align:left; color: var(--ink); min-height: 150px; background:#fff; box-shadow: 0 30px 80px -50px rgba(0,0,0,.35); }
+  .composer-big { position:relative; } .composer-big .ph { color: var(--ink-3); position:absolute; }
+  .caret { display:inline-block; width:2px; height:1em; background: var(--ink); vertical-align:-3px; margin-left:2px; animation: blink 1s steps(2) infinite; }
+  @keyframes blink { 50% { opacity:0; } }
+
+  /* scene 4: the demo */
+  .demo { position:relative; width: 1320px; height: 760px; }
+  .screen { position:absolute; inset:0; background:#fff; border:1px solid var(--line); border-radius: 26px; padding: 34px 40px; display:flex; flex-direction:column; gap: 20px; text-align:left; box-shadow: 0 40px 100px -60px rgba(0,0,0,.35); }
+  .bar { display:flex; gap:10px; } .bar i { width: 14px; height:14px; border-radius:50%; background: var(--line); }
+  .msg { max-width: 70%; padding: 16px 22px; border-radius: 20px; font-size: 27px; line-height:1.35; background: var(--bg-2); color: var(--ink-2); opacity:0; transform: translateY(10px); transition: opacity .28s var(--ease), transform .28s var(--ease); }
+  .msg.show { opacity:1; transform:none; }
+  .msg.them { align-self:flex-start; border-bottom-left-radius: 6px; }
+  .msg.me { align-self:flex-end; background: var(--ink); color:#fff; border-bottom-right-radius: 6px; }
+  .composer { margin-top:auto; border:1px solid var(--line); border-radius: 18px; padding: 20px 24px; font-size: 27px; min-height: 76px; position:relative; }
+  .composer .ph { color: var(--ink-3); position:absolute; transition: opacity .2s; }
+  .composer .typed { display:inline-block; overflow:hidden; white-space:nowrap; vertical-align:bottom; width:0; }
+  .composer .typed.go { transition: width .7s steps(40); width: 100%; }
+  .card { position:absolute; right: -40px; top: -30px; width: 760px; background: rgba(20,21,24,.97); color:#fff; border-radius: 24px; padding: 24px 28px; box-shadow: 0 40px 100px -40px rgba(0,0,0,.6); opacity:0; transform: translateY(-14px); transition: opacity .28s var(--ease), transform .28s var(--ease); text-align:left; }
+  .card.show { opacity:1; transform:none; }
+  .card .eyebrow { font-size: 20px; color:#9aa0a6; } .card .eyebrow b { color:#c9cdd2; font-weight:500; }
+  .card .line { font-size: 32px; font-weight: 580; margin: 8px 0 18px; letter-spacing:-.01em; }
+  .pills { display:flex; gap: 14px; }
+  .pill { display:inline-flex; align-items:center; gap: 10px; padding: 10px 18px; border-radius: 999px; background:#2a2c31; color:#e6e8eb; font-size: 22px; transition: transform .1s var(--ease); }
+  .pill kbd { font-size: 19px; background:#3a3d44; border:0; color:#fff; padding: 4px 9px; border-radius: 8px; }
+  .pill.yes { background: var(--accent); color:#fff; } .pill.yes kbd { background: rgba(255,255,255,.22); }
+  .pill.yes.press { transform: scale(.9); }
+  .card.flash { box-shadow: 0 0 0 4px var(--accent), 0 40px 100px -40px rgba(0,0,0,.6); }
+  .counter { position:absolute; left: 0; bottom: -90px; font-size: 26px; color: var(--ink-2); display:flex; gap: 14px; align-items:baseline; opacity:0; transition: opacity .28s; }
+  .counter.show { opacity:1; }
+  .counter b { font-size: 44px; color: var(--ink); font-weight: 680; letter-spacing:-.02em; min-width: 1.2ch; display:inline-block; text-align:center; }
+  .counter b.was { color: var(--ink-3); text-decoration: line-through; font-weight: 500; }
+  .counter b.add { color: var(--accent-ink); }
+  .recall { position:absolute; left: 0; top: -104px; width: 100%; text-align:left; font-size: 24px; color: var(--ink-3); opacity:0; white-space:nowrap; overflow:hidden; text-overflow: ellipsis; transition: opacity .3s var(--ease); }
+  .recall.show { opacity:1; }
+  .recall s { color: var(--ink-3); text-decoration-color: #c9cdd2; }
+  .recall b { color: var(--ink-2); font-weight: 600; margin-right: 14px; }
+  .screen { transition: opacity .28s var(--ease); }
+  .screen.gone { opacity:0; }
+  .screen.a, .screen.b, .screen.c { opacity:0; }
+  .screen.a.show, .screen.b.show, .screen.c.show { opacity:1; }
+  .screen.c { background:#1b1d21; border-color:#1b1d21; justify-content:flex-end; }
+  .screen.c .who { color:#8a8f98; }
+  .tl { font: 26px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; color:#e6e8eb; opacity:0; transition: opacity .22s; } .tl.show, .tl.dim { opacity:1; }
+  .tl.dim { color:#8a8f98; } .tl.green { color:#6fd3a3; min-height: 39px; }
+  .screen .who { font-size: 20px; color: var(--ink-3); letter-spacing:.06em; text-transform: uppercase; font-weight: 600; }
+  .composer .ctx { display:block; margin-top: 14px; padding: 12px 16px; background: var(--accent-soft); border-radius: 12px; color: var(--accent-ink); font-size: 24px; line-height: 1.35; opacity:0; transform: translateY(6px); transition: opacity .28s var(--ease), transform .28s var(--ease); }
+  .composer .ctx.show { opacity:1; transform:none; }
+  .card .why { font-size: 20px; color:#9aa0a6; margin: -10px 0 18px; }
+
+  /* scene 5: the data */
+  .data { display:grid; grid-template-columns: 1fr 1fr; gap: 80px; width: 1400px; align-items:center; text-align:left; }
+  .moments { display:flex; flex-direction:column; gap: 16px; }
+  .m { font-size: 30px; display:flex; gap: 16px; align-items:center; opacity:0; transform: translateX(-12px); transition: opacity .28s var(--ease), transform .28s var(--ease); color: var(--ink-2); }
+  .m.in { opacity:1; transform:none; }
+  .m i { width: 40px; height:40px; border-radius:50%; display:grid; place-items:center; font-style:normal; font-size: 22px; font-weight:700; background: var(--accent-soft); color: var(--accent-ink); }
+  .m i.x { background:#fdebea; color:#b42318; }
+  table { border-collapse: collapse; width: 100%; font-size: 24px; }
+  th { text-align:left; font-weight: 600; color: var(--ink-3); font-size: 18px; letter-spacing:.08em; text-transform: uppercase; padding: 0 14px 14px; border-bottom: 1px solid var(--line); }
+  td { padding: 14px; border-bottom: 1px solid var(--line); color: var(--ink-2); opacity:0; transition: opacity .5s; }
+  tr.in td { opacity:1; } td.y { color: var(--ink); }
+
+  /* scene 5: the numbers */
+  .nums { display:grid; grid-template-columns: repeat(3, 440px); gap: 40px; margin-top: 10px; }
+  .nums b { display:block; font-size: 160px; font-weight: 700; letter-spacing:-.045em; line-height:1; font-variant-numeric: tabular-nums; }
+  .nums span { display:block; margin-top: 14px; font-size: 30px; color: var(--ink-2); }
+  /* scene 6: the path */
+  .path { display:grid; grid-template-columns: repeat(3, 300px); gap: 40px; margin-top: 70px; position:relative; }
+  .path::before { content:""; position:absolute; left: 140px; right: 140px; top: 26px; height: 2px; background: var(--line); }
+  .node { text-align:center; position:relative; }
+  .node i { display:block; width: 54px; height:54px; border-radius:50%; margin: 0 auto 22px; background:#fff; border: 2px solid var(--line); position:relative; transition: border-color .22s; }
+  .node i::after { content:""; position:absolute; inset: 15px; border-radius:50%; background: var(--line); transition: background .22s; }
+  .node.lit i { border-color: var(--accent); } .node.lit i::after { background: var(--accent); }
+  .node h4 { margin:0 0 8px; font-size: 30px; opacity:.35; transition: opacity .22s; } .node.lit h4 { opacity:1; }
+  .node p { margin:0; color: var(--ink-2); font-size: 22px; opacity:0; transition: opacity .22s; } .node.lit p { opacity:1; }
+  .device { width: 120px; height: 200px; border: 3px solid var(--ink); border-radius: 28px; margin: 40px auto 0; opacity:0; transform: scale(.9); transition: opacity .6s var(--ease), transform .6s var(--ease); position:relative; }
+  .device.in { opacity:1; transform:none; }
+  .device::after { content:""; position:absolute; left: 50%; bottom: 12px; width: 40px; height: 4px; border-radius: 2px; background: var(--ink); transform: translateX(-50%); }
+
+  /* scene 7: founder */
+  .facts { list-style:none; padding:0; margin: 44px 0 0; display:grid; gap: 22px; text-align:left; font-size: 34px; color: var(--ink-2); }
+  .facts li { padding-left: 34px; position:relative; }
+  .facts li::before { content:""; position:absolute; left:0; top: 20px; width: 12px; height: 12px; border-radius:50%; background: var(--accent); }
+
+  /* overlay & progress */
+  #overlay { position:absolute; inset:0; display:grid; place-items:center; background: #fff; color: var(--ink-2); font-size: 26px; z-index: 5; cursor:default; }
+  #overlay small { display:block; color: var(--ink-3); font-size: 18px; margin-top: 12px; }
+  #progress { position:absolute; left:0; bottom:0; height: 4px; background: var(--accent); width: 0; opacity: 0; }
+  body.debug #progress { opacity: .6; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="overlay"><div>Press space to play<small>R restarts · P shows a progress bar for timing</small><small><a href="#" style="color:inherit" onclick="event.stopPropagation();event.preventDefault();showMp4()">Watch the rendered MP4 (1080p, 60 s)</a></small></div></div>
+
+  <!-- 1 hook -->
+  <div class="scene" data-at="0" data-dur="6">
+    <div class="composer-big t"><span class="ph" id="s1ph">Message Claude</span><span id="s1typed"></span><span class="caret"></span></div>
+    <h1 class="t late" style="margin-top:70px">You still explain.</h1>
+  </div>
+
+  <!-- 2 insight -->
+  <div class="scene" data-at="6" data-dur="6">
+    <h2 class="t" style="max-width:26ch">Every AI you use starts from zero.</h2>
+    <h2 class="t" style="margin-top:22px;max-width:26ch">It is brilliant. It still doesn't know you.</h2>
+    <div class="sub t">It gives you the average. Nobody holds a model of you.</div>
+  </div>
+
+  <!-- 3 nod -->
+  <div class="scene" data-at="12" data-dur="6">
+    <div class="mark t"><span class="face">(•‿•)⌖</span>Nod</div>
+    <div class="row">
+      <div class="chip t"><span class="n">1</span>reads your screen</div>
+      <div class="chip t"><span class="n">2</span>guesses your intent</div>
+      <div class="chip t"><span class="n">3</span>one key <kbd>⌘</kbd></div>
+    </div>
+    <div class="sub t late" id="follows" style="margin-top:48px">In every app and every chat. Your context follows you.</div>
+  </div>
+
+  <!-- 4 demo: the fix. First the same reel prompt from scene 1, now three words and the context Nod carries; then the agent; then Silvia, zero words. -->
+  <div class="scene" data-at="18" data-dur="15">
+    <div class="demo">
+      <div class="recall" id="d-recall"><b>Without Nod</b> <s>Edit this reel. Remember I want the reels to be a series of episodes about my predictions of the future, because one-offs don't build an audience.</s></div>
+      <div class="screen a" id="d-a">
+        <div class="bar"><i></i><i></i><i></i></div>
+        <div class="msg them show keep">Hey, can you send me the October invoice when you get a sec?</div>
+        <div class="msg me show keep">On it</div>
+        <div class="msg them" id="d-ask">Also, same amount as last month?</div>
+        <div class="msg me" id="d-sent">Yes, same as last month. Sending the invoice now.</div>
+        <div class="composer"><span class="ph" id="d-ph">Message Silvia</span><span class="typed" id="d-typed">Yes, same as last month. Sending the invoice now.</span></div>
+      </div>
+      <div class="screen b" id="d-b">
+        <div class="bar"><i></i><i></i><i></i></div>
+        <div class="who">Claude</div>
+        <div class="msg them show keep">Here's the reel with the new intro.</div>
+        <div class="composer"><span class="ph" id="b-ph">Message Claude</span><span id="b-typed"></span><span class="ctx" id="b-ctx">Context you may not have: I want the reels to be a series of episodes about my predictions of the future, because one-offs don't build an audience.</span></div>
+      </div>
+      <div class="screen c" id="d-c">
+        <div class="bar"><i></i><i></i><i></i></div>
+        <div class="who">Terminal · Claude Code</div>
+        <div class="tl dim">✓ migration added, 14 tests pass</div>
+        <div class="tl" id="c-ask">What should I do next?</div>
+        <div class="tl green" id="c-typed"></div>
+      </div>
+      <div class="card" id="c-card">
+        <div class="eyebrow"><b>(•‿•)⌖</b> say the word and I'll</div>
+        <div class="line">tell Claude to continue: ship it behind the flag, then update the changelog</div>
+        <div class="why">the way you answered the last three times</div>
+        <div class="pills"><span class="pill yes" id="c-yes">Yes <kbd>⌘</kbd></span><span class="pill">No <kbd>⌥</kbd></span><span class="pill">More <kbd>hold ⌘</kbd></span></div>
+      </div>
+      <div class="counter" id="c-counter">you typed <b>0</b> words <span style="color:var(--ink-3)">·</span> the agent kept going</div>
+      <div class="card" id="d-card">
+        <div class="eyebrow"><b>(•‿•)⌖</b> say the word and I'll</div>
+        <div class="line">reply to Silvia: same amount, invoice on its way</div>
+        <div class="pills"><span class="pill yes" id="d-yes">Yes <kbd>⌘</kbd></span><span class="pill">No <kbd>⌥</kbd></span><span class="pill">More <kbd>hold ⌘</kbd></span></div>
+      </div>
+      <div class="card" id="b-card">
+        <div class="eyebrow"><b>(•‿•)⌖</b> say the word and I'll</div>
+        <div class="line">give Claude the context it's missing</div>
+        <div class="why">you decided this in Grok, not here</div>
+        <div class="pills"><span class="pill yes" id="b-yes">Yes <kbd>⌘</kbd></span><span class="pill">No <kbd>⌥</kbd></span><span class="pill">More <kbd>hold ⌘</kbd></span></div>
+      </div>
+      <div class="counter" id="d-counter">words typed <b class="was">29</b> <span>→</span> <b>0</b></div>
+      <div class="counter" id="b-counter">you typed <b>3</b> words <span style="color:var(--ink-3)">·</span> Nod added <b class="add">27</b></div>
+    </div>
+  </div>
+
+  <!-- 5 the numbers: one week of her own use -->
+  <div class="scene" data-at="33" data-dur="8">
+    <div class="kicker t">One week, my own use</div>
+    <div class="nums">
+      <div class="t"><b id="n1" data-n="155">0</b><span>nods</span></div>
+      <div class="t"><b id="n2" data-n="106">0</b><span>messages written for me</span></div>
+      <div class="t"><b id="n3" data-n="97">0</b><span>things learned about me</span></div>
+    </div>
+    <h2 class="t late" id="labeled" style="font-size:48px;margin-top:80px;max-width:30ch">Every one is a labeled example of what I meant.</h2>
+    <div class="sub t late" id="stays" style="font-size:28px;margin-top:14px">It stays on my Mac. Nobody else has this.</div>
+  </div>
+
+  <!-- 6 vision -->
+  <div class="scene" data-at="41" data-dur="7">
+    <div class="kicker t">The vision</div>
+    <h2 class="t" style="max-width:26ch">Agents will replace the phone.</h2>
+    <div class="path">
+      <div class="node"><i></i><h4>One key</h4><p>today</p></div>
+      <div class="node"><i></i><h4>Your eyes</h4><p>next</p></div>
+      <div class="node"><i></i><h4>A thought</h4><p>eventually</p></div>
+    </div>
+    <div class="sub t late" id="device-cap" style="margin-top:60px;font-size:40px;color:var(--ink);max-width:30ch">The phone was the last interface. We're building the next one.</div>
+  </div>
+
+  <!-- 7 founder -->
+  <div class="scene" data-at="48" data-dur="8">
+    <div class="kicker t">The team</div>
+    <h2 class="t" style="max-width:26ch">We have worked on every one of those interfaces.</h2>
+    <ul class="facts">
+      <li class="t">Trained at Columbia. Brain-computer interface research from 19.</li>
+      <li class="t">Taught human-computer interaction to hundreds of people.</li>
+      <li class="t">Shipped production products used by tens of thousands of people, worth millions of dollars.</li>
+      <li class="t">Nod v0 built in under a week, after 34 user conversations.</li>
+    </ul>
+  </div>
+
+  <!-- 8 ask -->
+  <div class="scene" data-at="56" data-dur="5">
+    <div class="mark t"><span class="face">(•‿•)⌖</span>Nod</div>
+    <div class="sub t" style="font-size:40px;color:var(--ink);max-width:30ch">Your prompt is already filled. You just nod.</div>
+    <div class="sub t" style="font-size:28px;color:var(--ink-2);margin-top:18px;max-width:34ch">It follows you everywhere you work, and it knows what you would do.</div>
+    <div class="sub t" style="font-size:26px;color:var(--ink-3);margin-top:40px">DOMAIN-PLACEHOLDER</div>
+  </div>
+
+  <div id="progress"></div>
+</div>
+
+<script>
+  // Fit the 1920×1080 stage to the window.
+  const stage = document.getElementById('stage');
+  function fit() { const s = Math.min(innerWidth / 1920, innerHeight / 1080); stage.style.transform = `translate(${-960 * s}px, ${-540 * s}px) scale(${s})`; }
+  addEventListener('resize', fit); fit();
+
+  const scenes = [...document.querySelectorAll('.scene')];
+  const TOTAL = 61; window.NOD_TOTAL = TOTAL;
+  let timers = [], t0 = 0, raf = 0;
+  const at = (sec, fn) => timers.push(setTimeout(fn, sec * 1000));
+
+  function reset() {
+    timers.forEach(clearTimeout); timers = []; cancelAnimationFrame(raf);
+    scenes.forEach(s => { s.classList.remove('on', 'off'); s.querySelectorAll('.t,.m,.msg:not(.keep),.card,.counter,.device,.recall,.screen,.ctx').forEach(e => e.classList.remove('in', 'show', 'gone', 'flash')); });
+    ['n1','n2','n3'].forEach(id => document.getElementById(id).textContent = '0');
+    document.querySelectorAll('.node.lit').forEach(n => n.classList.remove('lit'));
+    document.getElementById('s1typed').textContent = ''; document.getElementById('s1ph').style.opacity = 1;
+    const ty = document.getElementById('d-typed'); ty.classList.remove('go'); document.getElementById('d-ph').style.opacity = 1;
+    ['d-yes','b-yes','c-yes'].forEach(id => document.getElementById(id).classList.remove('press'));
+    document.getElementById('c-ask').classList.remove('show'); const ct = document.getElementById('c-typed'); ct.textContent = ''; ct.classList.remove('show');
+    document.getElementById('b-typed').textContent = ''; document.getElementById('b-ph').style.opacity = 1;
+    document.getElementById('progress').style.width = '0';
+  }
+
+  function play() {
+    reset();
+    document.getElementById('overlay').style.display = 'none';
+    t0 = performance.now();
+    (function tick() { const p = Math.min(1, (performance.now() - t0) / 1000 / TOTAL); document.getElementById('progress').style.width = (p * 100) + '%'; if (p < 1) raf = requestAnimationFrame(tick); })();
+
+    // Scene switching and staggered text.
+    scenes.forEach(s => {
+      const start = +s.dataset.at, dur = +s.dataset.dur;
+      at(start, () => { s.classList.add('on'); s.querySelectorAll('.t:not(.late)').forEach((e, i) => at(0.05 + i * 0.45, () => e.classList.add('in'))); });
+      at(start + dur - 0.3, () => s.classList.add('off'));
+    });
+
+    // 1: the long prompt, typed.
+    const prompt = 'Edit this reel. Remember I want the reels to be a series of episodes about my predictions of the future, because one-offs don\'t build an audience.';
+    at(0.4, () => { document.getElementById('s1ph').style.opacity = 0; });
+    for (let i = 1; i <= prompt.length; i++) at(0.4 + i * 0.022, () => { document.getElementById('s1typed').textContent = prompt.slice(0, i); });
+    // the title "You still explain." lands at ~6.3 s via the .t stagger (second .t): force it later for effect.
+    at(4.1, () => scenes[0].querySelector('.late').classList.add('in'));
+
+    // 3: the line under the steps lands after them.
+    at(12 + 3.2, () => document.getElementById('follows').classList.add('in'));
+
+    // 4: the fix, three beats of five seconds. starts at 18.
+    const D = 18;
+    // Beat one: the composer from scene 1, three words from her, the context from Nod.
+    at(D + 0.2, () => { document.getElementById('d-recall').classList.add('show'); document.getElementById('d-b').classList.add('show'); });
+    const short = 'Edit this reel.';
+    at(D + 0.5, () => { document.getElementById('b-ph').style.opacity = 0; });
+    for (let i = 1; i <= short.length; i++) at(D + 0.5 + i * 0.05, () => { document.getElementById('b-typed').textContent = short.slice(0, i); });
+    at(D + 1.4, () => document.getElementById('b-card').classList.add('show'));
+    at(D + 2.6, () => { document.getElementById('b-yes').classList.add('press'); document.getElementById('b-card').classList.add('flash'); });
+    at(D + 2.75, () => { document.getElementById('b-yes').classList.remove('press'); });
+    at(D + 2.9, () => document.getElementById('b-ctx').classList.add('show'));
+    at(D + 3.5, () => document.getElementById('b-card').classList.remove('show'));
+    at(D + 3.7, () => document.getElementById('b-counter').classList.add('show'));
+    // Beat two: the coding agent stops and asks; the next prompt is already written the way she would.
+    at(D + 5.0, () => { document.getElementById('d-b').classList.remove('show'); document.getElementById('b-counter').classList.remove('show'); });
+    at(D + 5.2, () => document.getElementById('d-c').classList.add('show'));
+    at(D + 5.5, () => document.getElementById('c-ask').classList.add('show'));
+    at(D + 6.0, () => document.getElementById('c-card').classList.add('show'));
+    at(D + 7.3, () => { document.getElementById('c-yes').classList.add('press'); document.getElementById('c-card').classList.add('flash'); });
+    at(D + 7.45, () => { document.getElementById('c-yes').classList.remove('press'); });
+    at(D + 7.6, () => { const t = document.getElementById('c-typed'); t.textContent = '› ship it behind the flag, then update the changelog'; t.classList.add('show'); });
+    at(D + 8.3, () => document.getElementById('c-card').classList.remove('show'));
+    at(D + 8.5, () => document.getElementById('c-counter').classList.add('show'));
+    // Beat three: Silvia asks, the reply is ready, she types nothing.
+    at(D + 10.0, () => { document.getElementById('d-c').classList.remove('show'); document.getElementById('c-counter').classList.remove('show'); });
+    at(D + 10.2, () => document.getElementById('d-a').classList.add('show'));
+    at(D + 10.6, () => document.getElementById('d-ask').classList.add('show'));
+    at(D + 11.1, () => document.getElementById('d-card').classList.add('show'));
+    at(D + 12.4, () => { document.getElementById('d-yes').classList.add('press'); document.getElementById('d-card').classList.add('flash'); });
+    at(D + 12.55, () => { document.getElementById('d-yes').classList.remove('press'); });
+    at(D + 12.6, () => { document.getElementById('d-ph').style.opacity = 0; document.getElementById('d-typed').classList.add('go'); });
+    at(D + 13.3, () => { document.getElementById('d-card').classList.remove('show'); });
+    at(D + 13.4, () => { document.getElementById('d-typed').classList.remove('go'); document.getElementById('d-ph').style.opacity = 1; document.getElementById('d-sent').classList.add('show'); });
+    at(D + 13.7, () => document.getElementById('d-counter').classList.add('show'));
+
+    // 5: the numbers. starts at 33. Each counts up as it appears.
+    const E = 33;
+    const count = (id, delay) => at(E + delay, () => { const el = document.getElementById(id), to = +el.dataset.n, t0 = performance.now();
+      (function step() { const p = Math.min(1, (performance.now() - t0) / 900), k = 1 - Math.pow(1 - p, 3); el.textContent = Math.round(to * k); if (p < 1) requestAnimationFrame(step); })(); });
+    count('n1', 0.5); count('n2', 1.0); count('n3', 1.5);
+    at(E + 3.6, () => document.getElementById('labeled').classList.add('in'));
+    at(E + 4.8, () => document.getElementById('stays').classList.add('in'));
+
+    // 6: the vision. starts at 41.
+    const V = 41, nodes = document.querySelectorAll('.node');
+    nodes.forEach((n, i) => at(V + 1.3 + i * 0.8, () => n.classList.add('lit')));
+    at(V + 4.3, () => document.getElementById('device-cap').classList.add('in'));
+  }
+
+  // The rendered MP4, stored on this artifact, played in place of the live animation.
+  function showMp4() {
+    const v = document.createElement('video');
+    v.src = '/_blob/3521c7c8a17f4a4476dc004164103db6'; v.controls = true; v.autoplay = true; v.playsInline = true;
+    v.style.cssText = 'position:fixed;inset:0;width:100vw;height:100vh;background:#000;z-index:50;object-fit:contain';
+    document.body.appendChild(v);
+  }
+  addEventListener('keydown', e => {
+    if (e.code === 'Space') { e.preventDefault(); play(); }
+    if (e.key === 'r' || e.key === 'R') play();
+    if (e.key === 'p' || e.key === 'P') document.body.classList.toggle('debug');
+  });
+  document.getElementById('overlay').addEventListener('click', play);
+</script>
+</body>
+</html>

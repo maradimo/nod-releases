@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>22 Labs</title>
+<meta name="description" content="22 Labs builds the next interface: one that understands your intent, from a model of you that you own, so your focus goes to the work only you can do. Our first product is Nod.">
+<meta property="og:title" content="22 Labs">
+<meta property="og:description" content="The next interface knows what you mean. 22 Labs builds it, from a model of you that you own.">
+<style>
+  :root {
+    --bg: #0f1012; --bg-2: #16181b; --ink: #ffffff; --ink-2: #c9cdd2; --ink-3: #8a8f98; --line: #26292e;
+    --accent: #19a36b; --accent-bright: #6fd3a3; --accent-soft: rgba(25,163,107,.14);
+    --ease: cubic-bezier(.2,.7,.2,1); --radius: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 17px/1.55 -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, "Segoe UI", Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; text-decoration: none; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+  header { position: sticky; top: 0; z-index: 10; background: rgba(15,16,18,.82); backdrop-filter: saturate(140%) blur(10px); -webkit-backdrop-filter: saturate(140%) blur(10px); border-bottom: 1px solid transparent; transition: border-color .3s; }
+  header.scrolled { border-color: var(--line); }
+  .nav { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+  .logo { font-weight: 680; letter-spacing: -.02em; font-size: 18px; display: flex; align-items: center; gap: 10px; }
+  .logo i { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft), 0 0 18px rgba(25,163,107,.5); }
+  .nav nav { display: flex; gap: 26px; font-size: 14.5px; color: var(--ink-2); }
+  .nav nav a:hover { color: var(--ink); }
+  .btn { display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 20px; border-radius: 999px; background: var(--ink); color: var(--bg); font-weight: 600; font-size: 15px; transition: transform .15s var(--ease), opacity .2s; }
+  .btn:hover { transform: translateY(-1px); } .btn:active { transform: translateY(0) scale(.98); }
+  .btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+  .btn.accent { background: var(--accent); color: #fff; }
+
+  .hero { padding: 120px 0 96px; text-align: center; position: relative; overflow: hidden; }
+  .hero::before { content: ""; position: absolute; left: 50%; top: -220px; width: 900px; height: 600px; transform: translateX(-50%); background: radial-gradient(ellipse at center, rgba(25,163,107,.22), transparent 60%); pointer-events: none; }
+  .kicker { font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--accent-bright); font-weight: 600; margin-bottom: 18px; }
+  h1 { font-size: clamp(40px, 7vw, 84px); line-height: 1.0; letter-spacing: -.04em; font-weight: 700; margin: 0 auto 26px; max-width: 14ch; position: relative; }
+  .lead { font-size: clamp(18px, 2.1vw, 23px); color: var(--ink-2); max-width: 44ch; margin: 0 auto 36px; position: relative; }
+  .actions { display: flex; gap: 12px; justify-content: center; position: relative; }
+
+  section { padding: 96px 0; border-top: 1px solid var(--line); }
+  h2 { font-size: clamp(30px, 4.2vw, 50px); line-height: 1.08; letter-spacing: -.03em; font-weight: 680; margin: 0 0 22px; max-width: 20ch; }
+  .center { text-align: center; } .center h2 { margin-left: auto; margin-right: auto; }
+  .one { color: var(--ink-2); font-size: 18px; max-width: 56ch; margin: 0 auto; line-height: 1.6; }
+  .one strong { color: var(--ink); font-weight: 600; }
+  .two { display: grid; grid-template-columns: 1fr 1.1fr; gap: 56px; align-items: start; }
+  .two .one { margin: 0; }
+
+  /* the statement, three beats */
+  .beats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-top: 48px; }
+  @media (max-width: 1100px) { .beats { grid-template-columns: repeat(2, 1fr); } }
+  .beat { border: 1px solid var(--line); border-radius: var(--radius); padding: 26px 24px 28px; background: var(--bg-2); }
+  .beat b { display: block; font-size: 44px; font-weight: 700; letter-spacing: -.03em; line-height: 1; color: var(--accent-bright); margin-bottom: 18px; font-variant-numeric: tabular-nums; }
+  .beat h3 { margin: 0 0 8px; font-size: 20px; letter-spacing: -.01em; }
+  .beat p { margin: 0; color: var(--ink-2); font-size: 15px; }
+
+  /* the path */
+  .path { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; margin-top: 56px; position: relative; }
+  .path::before { content: ""; position: absolute; left: 10%; right: 10%; top: 15px; height: 1px; background: var(--line); }
+  .node { text-align: center; position: relative; padding: 0 10px; }
+  .node i { display: block; width: 30px; height: 30px; border-radius: 50%; margin: 0 auto 14px; background: var(--bg-2); border: 1px solid #3a3d44; position: relative; }
+  .node i::after { content: ""; position: absolute; inset: 9px; border-radius: 50%; background: #3a3d44; }
+  .node h4 { margin: 0 0 6px; font-size: 16px; }
+  .node p { margin: 0; color: var(--ink-3); font-size: 14px; }
+  .node.past h4 { color: var(--ink-3); } .node.past p { color: #6b7079; }
+  .node.now i { border-color: var(--accent); box-shadow: 0 0 0 6px var(--accent-soft), 0 0 30px rgba(25,163,107,.45); } .node.now i::after { background: var(--accent); }
+  .path.in .node.next i { animation: light 1.2s var(--ease) forwards; } .path.in .node.next i::after { animation: lightin 1.2s var(--ease) forwards; }
+  .path.in .node.next:nth-child(4) i, .path.in .node.next:nth-child(4) i::after { animation-delay: .9s; }
+  .path.in .node.next:nth-child(5) i, .path.in .node.next:nth-child(5) i::after { animation-delay: 1.8s; }
+  .node.next:nth-child(5) h4 { color: var(--ink-3); }
+  @keyframes light { to { border-color: var(--accent); box-shadow: 0 0 0 6px var(--accent-soft), 0 0 24px rgba(25,163,107,.35); } }
+  @keyframes lightin { to { background: var(--accent); } }
+  .device { width: 72px; height: 124px; border: 2px solid #fff; border-radius: 20px; margin: 64px auto 0; position: relative; box-shadow: 0 0 70px rgba(25,163,107,.28); }
+  .device::after { content: ""; position: absolute; left: 50%; bottom: 10px; width: 26px; height: 3px; border-radius: 2px; background: #fff; transform: translateX(-50%); }
+  .device::before { content: ""; position: absolute; inset: 0; border-radius: 18px; background: radial-gradient(circle at 50% 40%, rgba(25,163,107,.4), transparent 60%); }
+  .path + .device + .one { margin-top: 28px; text-align: center; }
+
+  /* principles */
+  .principles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 22px; margin-top: 48px; }
+  .pr { border: 1px solid var(--line); border-radius: var(--radius); padding: 28px 26px; background: var(--bg-2); }
+  .pr h3 { margin: 0 0 10px; font-size: 24px; letter-spacing: -.02em; }
+  .pr h3 em { font-style: normal; color: var(--accent-bright); }
+  .pr p { margin: 0; color: var(--ink-2); font-size: 16px; }
+
+  /* the product */
+  .product { border: 1px solid var(--line); border-radius: 24px; background: linear-gradient(180deg, #16181b, #0f1012); padding: 48px; display: grid; grid-template-columns: 1.1fr 1fr; gap: 48px; align-items: center; margin-top: 48px; position: relative; overflow: hidden; }
+  .product::after { content: ""; position: absolute; right: -120px; bottom: -160px; width: 420px; height: 420px; background: radial-gradient(circle, rgba(25,163,107,.25), transparent 62%); pointer-events: none; }
+  .product .face { display: inline-flex; align-items: center; gap: 12px; font-weight: 680; font-size: 22px; margin-bottom: 18px; }
+  .product .face span { font-size: 15px; font-weight: 600; color: var(--accent-bright); background: var(--accent-soft); border-radius: 999px; padding: 6px 11px; letter-spacing: .02em; line-height: 1; }
+  .product h3 { font-size: clamp(28px, 3.6vw, 40px); line-height: 1.08; letter-spacing: -.03em; margin: 0 0 14px; }
+  .product p { color: var(--ink-2); margin: 0 0 26px; max-width: 42ch; }
+  .card { background: #fff; color: #111214; border-radius: 16px; padding: 16px 18px; box-shadow: 0 30px 80px -30px rgba(0,0,0,.7); position: relative; }
+  .card .eyebrow { font-size: 12px; color: #8a8f98; } .card .eyebrow b { color: #4b4f56; font-weight: 500; }
+  .card .line { font-size: 17px; font-weight: 600; margin: 4px 0 12px; letter-spacing: -.01em; }
+  .pills { display: flex; gap: 8px; }
+  .pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 11px; border-radius: 999px; background: #f0f1f3; color: #4b4f56; font-size: 13px; }
+  .pill kbd { font: 12px/1 ui-monospace, SFMono-Regular, Menlo, monospace; background: #e2e4e8; padding: 2px 5px; border-radius: 5px; }
+  .pill.yes { background: var(--accent); color: #fff; } .pill.yes kbd { background: rgba(255,255,255,.25); color: #fff; }
+
+  footer { border-top: 1px solid var(--line); padding: 36px 0 56px; color: var(--ink-3); font-size: 14px; }
+  footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  footer a:hover { color: var(--ink); }
+
+  .reveal { opacity: 0; transform: translateY(14px); transition: opacity .7s var(--ease), transform .7s var(--ease); }
+  .reveal.in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) { .reveal, .path.in .node.next i, .path.in .node.next i::after { animation: none !important; transition: none !important; opacity: 1 !important; transform: none !important; } }
+  @media (max-width: 860px) {
+    .hero { padding: 72px 0 56px; }
+    .nav nav { display: none; }
+    .two, .beats, .principles, .product { grid-template-columns: 1fr; }
+    .product { padding: 28px; }
+    .path { grid-template-columns: 1fr 1fr; row-gap: 28px; } .path::before { display: none; }
+    section { padding: 64px 0; }
+  }
+</style>
+</head>
+<body>
+<header id="top">
+  <div class="wrap nav">
+    <a class="logo" href="#"><i></i>22 Labs</a>
+    <nav>
+      <a href="#thesis">Why</a>
+      <a href="#path">The next interface</a>
+      <a href="#principles">Principles</a>
+      <a href="#team">Team</a>
+      <a href="#nod">Nod</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="hero wrap">
+    <div class="kicker">22 Labs</div>
+    <h1>The next interface knows what you mean.</h1>
+    <p class="lead">You tell AI the outcome and still spend the day steering it. 22 Labs builds the interface that understands your intent, from a model of you that you own, so your focus goes to the work only you can do.</p>
+    <div class="actions">
+      <a class="btn accent" href="https://claude.ai/artifact/PFypDuwGS9ebuQSjMFLtvk">Our first product</a>
+      <a class="btn ghost" href="#thesis">Why we exist</a>
+    </div>
+  </div>
+
+  <section id="thesis">
+    <div class="wrap">
+      <div class="reveal center">
+        <div class="kicker">The problem</div>
+        <h2>The models got smart. They never got to know you.</h2>
+      </div>
+      <div class="beats">
+        <div class="beat reveal"><b>1</b><h3>You explain, again</h3><p>Every tool starts from zero. You put your head into words, again.</p></div>
+        <div class="beat reveal"><b>2</b><h3>You get the average</h3><p>Ask for your website, get everyone's website. It has no idea what you would have liked.</p></div>
+        <div class="beat reveal"><b>3</b><h3>You babysit</h3><p>Steer, nudge, correct, retry. Your focus goes with every round.</p></div>
+        <div class="beat reveal"><b>4</b><h3>A model of you fixes it</h3><p>Every nod teaches it what you meant. The output becomes yours. So is the model.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="path">
+    <div class="wrap">
+      <div class="reveal center">
+        <div class="kicker">A new kind of interface</div>
+        <h2>First you told it what to do. Then what you wanted. Next, it knows.</h2>
+        <p class="one">You stopped telling the computer what to do and started telling it what you want. It got no better at understanding you. The next interface asks for less, because it has been with you the whole time.</p>
+      </div>
+      <div class="path reveal">
+        <div class="node past"><i></i><h4>Typing</h4><p>Exact commands, then paragraphs of what you want.</p></div>
+        <div class="node past"><i></i><h4>Voice</h4><p>The same paragraphs, spoken.</p></div>
+        <div class="node now"><i></i><h4>Screen</h4><p>Nod, today. One key, or none.</p></div>
+        <div class="node next"><i></i><h4>Eyes</h4><p>A glance says what you mean.</p></div>
+        <div class="node next"><i></i><h4>And after</h4><p>Less still, until you and the machine work as one.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="principles">
+    <div class="wrap">
+      <div class="reveal center">
+        <div class="kicker">What we believe</div>
+        <h2>Your thinking is yours.</h2>
+      </div>
+      <div class="principles">
+        <div class="pr reveal"><h3>Augmented, <em>not replaced.</em></h3><p>Tools that make you more capable. You stay in the loop, and the loop gets shorter.</p></div>
+        <div class="pr reveal"><h3>Owned, <em>by you.</em></h3><p>A model of how you think is yours. It stays on your machine; a cloud model sees only redacted text.</p></div>
+        <div class="pr reveal"><h3>Private, <em>local first.</em></h3><p>What we read from your life stays on your machine, redacted, in files you can open and delete.</p></div>
+        <div class="pr reveal"><h3>Credited, <em>and paid.</em></h3><p>When AI does work with your model, you are credited and paid for it.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="team">
+    <div class="wrap">
+      <div class="reveal center">
+        <div class="kicker">The team</div>
+        <h2>Built by people who have worked on the interface for years.</h2>
+      </div>
+      <div class="beats">
+        <div class="beat reveal"><b>·</b><h3>Columbia</h3><p>Trained there, in computer science and research.</p></div>
+        <div class="beat reveal"><b>·</b><h3>Brain-computer interfaces</h3><p>Research experience in reading intent without words.</p></div>
+        <div class="beat reveal"><b>·</b><h3>Taught the field</h3><p>Hundreds of people trained in human-computer interaction.</p></div>
+        <div class="beat reveal"><b>·</b><h3>Shipped at scale</h3><p>Production products used by tens of thousands of people, worth millions of dollars.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="nod">
+    <div class="wrap">
+      <div class="reveal center">
+        <div class="kicker">Our first product</div>
+        <h2>Nod, for Mac.</h2>
+      </div>
+      <div class="product reveal">
+        <div>
+          <div class="face"><span>(•‿•)⌖</span>Nod</div>
+          <h3>Your prompt is already filled. You just nod.</h3>
+          <p>Reads your screen, guesses your intent, one key. Stays on your Mac.</p>
+          <a class="btn accent" href="https://claude.ai/artifact/PFypDuwGS9ebuQSjMFLtvk">Meet Nod</a>
+        </div>
+        <div class="card">
+          <div class="eyebrow"><b>(•‿•)⌖</b> say the word and I'll</div>
+          <div class="line">give Claude the context it's missing</div>
+          <div class="pills"><span class="pill yes">Yes <kbd>⌘</kbd></span><span class="pill">No <kbd>⌥</kbd></span><span class="pill">More <kbd>hold ⌘</kbd></span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>22 Labs</div>
+    <div><!-- contact address goes here once chosen --></div>
+  </div>
+</footer>
+
+<script>
+  const hdr = document.getElementById('top');
+  addEventListener('scroll', () => hdr.classList.toggle('scrolled', scrollY > 8), { passive: true });
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: 0.18 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+</script>
+</body>
+</html>

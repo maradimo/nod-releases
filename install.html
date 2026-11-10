@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Install Nod</title>
+<meta name="description" content="How to install Nod on a Mac: download, first run, permissions, and what to expect in the first week.">
+<meta name="robots" content="noindex">
+<style>
+  :root { --ink:#111214; --ink-2:#4b4f56; --ink-3:#8a8f98; --line:#e6e8eb; --bg:#fff; --bg-2:#f6f7f8; --accent:#19a36b; --accent-ink:#0d7a4f; --accent-soft:#e6f6ef; --radius:14px; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:17px/1.6 -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width:720px; margin:0 auto; padding:56px 20px 96px; }
+  h1 { font-size:40px; line-height:1.1; letter-spacing:-.02em; margin:0 0 12px; }
+  h2 { font-size:22px; margin:40px 0 10px; letter-spacing:-.01em; }
+  p, li { color:var(--ink-2); }
+  .lead { font-size:20px; color:var(--ink-2); margin:0 0 28px; }
+  .btn { display:inline-block; background:var(--accent); color:#fff; text-decoration:none; padding:12px 18px; border-radius:999px; font-weight:600; }
+  .btn:hover { background:var(--accent-ink); }
+  .note { background:var(--bg-2); border:1px solid var(--line); border-radius:var(--radius); padding:14px 16px; margin:16px 0; }
+  ol li, ul li { margin:8px 0; }
+  kbd { font:14px ui-monospace, SF Mono, Menlo, monospace; background:var(--bg-2); border:1px solid var(--line); border-radius:6px; padding:1px 6px; color:var(--ink); }
+  code { font:15px ui-monospace, SF Mono, Menlo, monospace; background:var(--bg-2); padding:1px 5px; border-radius:6px; }
+  footer { color:var(--ink-3); font-size:14px; margin-top:64px; border-top:1px solid var(--line); padding-top:20px; }
+  a { color:var(--accent-ink); }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <h1>Install Nod</h1>
+  <p class="lead">A menu-bar app for the Mac. It watches what you are doing and has your next message ready before you ask. Tap <kbd>⌘</kbd> on its own and the words are typed for you.</p>
+  <p><a class="btn" href="https://github.com/maradimo/nod-releases/releases/latest/download/Nod.zip">Download Nod for Mac</a></p>
+  <div class="note">You need an Apple Silicon Mac on macOS 14 or newer, and a brain for Nod: either 16 GB of memory for the local model, or an Anthropic API key. The first run sets up whichever you pick.</div>
+
+  <h2>First run, about ten minutes</h2>
+  <ol>
+    <li><strong>Open the zip and drag Nod.app to Applications.</strong> Then open it. If macOS says it cannot verify the developer, open System Settings › Privacy &amp; Security, scroll down, click <strong>Open Anyway</strong> next to Nod, and open it again. This happens once.</li>
+    <li><strong>Pick where Nod thinks.</strong> "A model on this Mac" needs <a href="https://ollama.com/download">Ollama</a>; Nod checks for it and pulls the model (about 5 GB) with a progress bar. Nothing you type or read leaves your Mac. Or paste a Claude API key; it goes into your Keychain and nowhere else.</li>
+    <li><strong>Two permissions.</strong> Accessibility lets Nod read the field you are typing in; Screen Recording lets it read the window with Apple's on-device text recognition. Grant both from the buttons in the window. Microphone and Speech are asked for only if you use the voice features.</li>
+    <li><strong>The tutorial.</strong> One minute: you try each gesture for real.</li>
+  </ol>
+
+  <h2>Using it</h2>
+  <ul>
+    <li>A small pill sits in a corner. When Nod has a guess, the pill names it in one line and gets out of your way; tap <kbd>⌘</kbd> to open the card with the words ready, and <kbd>⌘</kbd> again to do it.</li>
+    <li><kbd>⌘</kbd> tap = yes. <kbd>⌥</kbd> tap = next idea, or not now. Hold <kbd>⌘</kbd> = all ideas. Hold <kbd>⌥</kbd> = tell it what you want, by voice or typing. <kbd>esc</kbd> closes the card.</li>
+    <li>In a chat with an assistant or a person, type half a sentence, pause, tap <kbd>⌘</kbd>: Nod finishes it in your words.</li>
+    <li>The first days it works from what is on your screen. After that it starts to know what you decided, prefer and have to do, and the cards get specific.</li>
+  </ul>
+
+  <h2>What it keeps, and where</h2>
+  <ul>
+    <li>Everything is redacted before it is stored: passwords are never read, card numbers, keys and tokens are masked, apps like password managers contribute only their name.</li>
+    <li>Menu bar › <strong>What Nod knows</strong> shows what it learned about you, with the source of each item, and lets you forget any of it.</li>
+    <li>Menu bar › <strong>What left this Mac today</strong> shows every payload sent to the model you chose. With the local model, that list is empty.</li>
+    <li>A nightly encrypted backup goes to your own iCloud Drive, if you have one. Nothing goes to us.</li>
+    <li><strong>During the beta</strong> we ask you to turn on <em>Share usage</em> (last step of the first run, or the menu bar): once a day Nod sends what it did and how long it took, cards, taps, timings, errors, never what you read or wrote. Menu bar › <strong>Show the last usage report</strong> shows exactly what goes out; the switch turns it off any time.</li>
+  </ul>
+
+  <h2>When something is wrong</h2>
+  <p>Menu bar › <strong>Send the log</strong> saves a redacted log (no screen text, no messages) to Downloads and opens an email. A sentence about what you expected is the most useful thing you can add.</p>
+
+  <h2>Stopping and removing</h2>
+  <p>Menu bar › Quit Nod stops it. To remove it, drag Nod.app to the Trash and delete <code>~/Library/Application Support/Nod</code>.</p>
+
+  <footer>Nod, by 22 Labs. Updates arrive on their own; Menu bar › Check for updates checks now.</footer>
+</main>
+</body>
+</html>

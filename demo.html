@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nod demo</title>
+<style>
+  :root { --ink:#111214; --ink-2:#4b4f56; --ink-3:#8a8f98; --line:#e6e8eb; --bg:#fff; --bg-2:#f6f7f8; --accent:#19a36b; --accent-ink:#0d7a4f; --accent-soft:#e6f6ef; --ease:cubic-bezier(.2,.85,.2,1); }
+  html, body { margin:0; height:100%; background:#000; overflow:hidden; cursor:none; }
+  body { font: 17px/1.5 -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, "Segoe UI", Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; color: var(--ink); }
+  #stage { position:absolute; left:50%; top:50%; width:1920px; height:1080px; transform-origin:0 0; background:var(--bg); overflow:hidden; }
+  .scene { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; opacity:0; transition: opacity .22s var(--ease); padding: 0 160px; text-align:center; }
+  .scene.on { opacity:1; } .scene.off { opacity:0; }
+  .t { opacity:0; transform: translateY(12px); transition: opacity .3s var(--ease), transform .3s var(--ease); }
+  .on .t.in { opacity:1; transform:none; }
+  h1 { font-size: 92px; line-height:1.02; letter-spacing:-.035em; font-weight:680; margin:0; max-width: 18ch; }
+  h2 { font-size: 60px; line-height:1.06; letter-spacing:-.03em; font-weight:650; margin:0; max-width: 22ch; }
+  .sub { font-size: 34px; color: var(--ink-2); margin-top: 28px; max-width: 34ch; }
+  .kicker { font-size: 22px; letter-spacing:.1em; text-transform:uppercase; color: var(--accent-ink); font-weight:600; margin-bottom: 26px; }
+  .mark { display:flex; align-items:center; gap: 22px; font-size: 120px; font-weight: 700; letter-spacing:-.04em; }
+  .mark .face { font-size: 44px; font-weight: 600; letter-spacing: .02em; color: var(--accent-ink); background: var(--accent-soft); border-radius: 999px; padding: 14px 26px; line-height: 1; }
+  kbd { font: 26px/1 ui-monospace, SFMono-Regular, Menlo, monospace; border:1px solid var(--line); border-bottom-width:3px; border-radius:10px; padding: 6px 12px; background: var(--bg-2); }
+
+  /* the feature frame: a caption on top, a mock app, the card over it */
+  .feat { position:relative; width: 1400px; height: 820px; margin-top: 110px; }
+  .cap { position:absolute; left:0; right:0; top:-120px; font-size: 38px; font-weight: 600; letter-spacing:-.02em; color: var(--ink); opacity:0; transform: translateY(8px); transition: opacity .25s var(--ease), transform .25s var(--ease); }
+  .cap.show { opacity:1; transform:none; }
+  .cap small { display:block; font-size: 24px; font-weight: 500; color: var(--ink-3); margin-top: 8px; letter-spacing: 0; opacity:0; transform: translateY(6px); transition: opacity .25s var(--ease), transform .25s var(--ease); }
+  .cap.full small { opacity:1; transform:none; }
+  .num { position:absolute; left: 50%; top: -180px; transform: translateX(-50%); width: 56px; height: 56px; border-radius: 50%; background: var(--ink); color:#fff; font-size: 26px; font-weight: 700; display:grid; place-items:center; opacity:0; transition: opacity .2s; }
+  .num.show { opacity:1; }
+  .screen { position:absolute; left: 0; right: 0; top: 0; height: 720px; box-sizing:border-box; background:#fff; border:1px solid var(--line); border-radius: 26px; padding: 34px 40px; display:flex; flex-direction:column; gap: 18px; text-align:left; box-shadow: 0 40px 100px -60px rgba(0,0,0,.35); opacity:0; transition: opacity .25s var(--ease); }
+  .screen.show { opacity:1; }
+  .screen.dark { background:#1b1d21; border-color:#1b1d21; color:#e6e8eb; }
+  .bar { display:flex; gap:10px; } .bar i { width: 14px; height:14px; border-radius:50%; background: var(--line); } .dark .bar i { background:#3a3d44; }
+  .who { font-size: 20px; color: var(--ink-3); letter-spacing:.06em; text-transform: uppercase; font-weight: 600; }
+  .msg { max-width: 68%; padding: 16px 22px; border-radius: 20px; font-size: 27px; line-height:1.35; background: var(--bg-2); color: var(--ink-2); opacity:0; transform: translateY(10px); transition: opacity .25s var(--ease), transform .25s var(--ease); }
+  .msg.show { opacity:1; transform:none; }
+  .msg.them { align-self:flex-start; border-bottom-left-radius: 6px; }
+  .msg.me { align-self:flex-end; background: var(--ink); color:#fff; border-bottom-right-radius: 6px; }
+  .dark .msg.them { background:#2a2c31; color:#e6e8eb; }
+  .composer { margin-top:auto; border:1px solid var(--line); border-radius: 18px; padding: 20px 24px; font-size: 27px; min-height: 76px; position:relative; }
+  .dark .composer { border-color:#3a3d44; }
+  .composer .ph { color: var(--ink-3); position:absolute; transition: opacity .15s; }
+  .composer .typed { display:inline-block; overflow:hidden; white-space:nowrap; vertical-align:bottom; width:0; }
+  .composer .typed.go { transition: width .6s steps(40); width: 100%; }
+  .composer .ctx { display:block; margin-top: 14px; padding: 12px 16px; background: var(--accent-soft); border-radius: 12px; color: var(--accent-ink); font-size: 24px; line-height: 1.35; opacity:0; transform: translateY(6px); transition: opacity .25s var(--ease), transform .25s var(--ease); }
+  .composer .ctx.show { opacity:1; transform:none; }
+  .chipf { display:inline-flex; align-items:center; gap: 10px; padding: 8px 14px; border-radius: 10px; background:#2a2c31; color:#e6e8eb; font-size: 20px; margin-top: 12px; opacity:0; transform: scale(.9); transition: opacity .2s var(--ease), transform .2s var(--ease); }
+  .chipf.show { opacity:1; transform:none; }
+  .chipf i { width: 26px; height: 20px; border-radius: 4px; background: linear-gradient(135deg,#6fd3a3,#19a36b); }
+  .tl { font: 26px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; color:#e6e8eb; opacity:0; transition: opacity .2s; } .tl.show, .tl.dim { opacity:1; }
+  .tl.dim { color:#8a8f98; } .tl.green { color:#6fd3a3; min-height: 39px; }
+  .mail .hdr { font-size: 22px; color: var(--ink-3); line-height: 1.6; }
+  .mail .hdr b { color: var(--ink); font-weight: 600; }
+  .mail .body { font-size: 27px; line-height: 1.45; color: var(--ink-2); white-space: pre-line; max-width: 42%; }
+  .note { background: #fffdf3; }
+  .note .title { font-size: 40px; font-weight: 650; letter-spacing:-.02em; }
+  .note .live { font-size: 29px; line-height: 1.5; color: var(--ink-3); min-height: 140px; white-space: pre-line; }
+  .note .live.clean { color: var(--ink); }
+  .note .live.clean .cur { display:none; }
+  .cur { display:inline-block; width:2px; height:1em; background: currentColor; vertical-align:-3px; margin-left:2px; animation: blink 1s steps(2) infinite; }
+  @keyframes blink { 50% { opacity:0; } }
+  .toast { position:absolute; right: 30px; top: 30px; background: rgba(255,255,255,.95); border:1px solid var(--line); border-radius: 14px; padding: 14px 18px; font-size: 21px; color: var(--ink-2); box-shadow: 0 20px 60px -30px rgba(0,0,0,.4); display:flex; gap: 12px; align-items:center; opacity:0; transform: translateY(-10px); transition: opacity .2s var(--ease), transform .2s var(--ease); }
+  .toast.show { opacity:1; transform:none; }
+  .toast i { width: 44px; height: 30px; border-radius: 5px; background: linear-gradient(135deg,#1b1d21,#4b4f56); }
+  .flash { position:absolute; inset:0; background:#fff; opacity:0; border-radius: 26px; pointer-events:none; }
+  .flash.go { animation: flash .35s ease-out; }
+  @keyframes flash { 0% { opacity:.9; } 100% { opacity:0; } }
+
+  /* the real card */
+  .card { position:absolute; right: -30px; top: 60px; width: 760px; background: #141518; color:#fff; border-radius: 24px; padding: 24px 28px; box-shadow: 0 40px 100px -40px rgba(0,0,0,.6); opacity:0; transform: translateY(-14px); transition: opacity .22s var(--ease), transform .22s var(--ease); text-align:left; z-index: 3; }
+  .card.show { opacity:1; transform:none; }
+  .card .eyebrow { font-size: 20px; color:#9aa0a6; } .card .eyebrow b { color:#c9cdd2; font-weight:500; }
+  .card .line { font-size: 32px; font-weight: 580; margin: 8px 0 6px; letter-spacing:-.01em; }
+  .card .why { font-size: 20px; color:#9aa0a6; margin: 0 0 18px; }
+  .pills { display:flex; gap: 14px; }
+  .pill { display:inline-flex; align-items:center; gap: 10px; padding: 10px 18px; border-radius: 999px; background:#2a2c31; color:#e6e8eb; font-size: 22px; transition: transform .1s var(--ease), background .15s; }
+  .pill kbd { font-size: 19px; background:#3a3d44; border:0; color:#fff; padding: 4px 9px; border-radius: 8px; }
+  .pill.yes { background: var(--accent); color:#fff; } .pill.yes kbd { background: rgba(255,255,255,.22); }
+  .pill.press { transform: scale(.9); } .pill.no.press { background:#e6e8eb; color:#111; }
+  .card.flashy { box-shadow: 0 0 0 4px var(--accent), 0 40px 100px -40px rgba(0,0,0,.6); }
+  .ideas { list-style:none; margin: 14px 0 0; padding: 0; border-top: 1px solid #2a2c31; display:none; }
+  .card.more .ideas { display:block; }
+  .ideas li { padding: 12px 14px; font-size: 24px; color:#c9cdd2; border-radius: 12px; display:flex; justify-content:space-between; align-items:center; }
+  .ideas li.hot { background:#2a2c31; color:#fff; }
+  .ideas li kbd { font-size: 17px; background:#3a3d44; border:0; color:#fff; padding: 3px 8px; border-radius: 7px; opacity: .8; }
+  .card .done { display:none; font-size: 28px; font-weight: 580; color:#6fd3a3; }
+  .card .done b { color:#fff; font-weight: 500; font-size: 22px; display:block; margin-top: 4px; }
+  .card.isdone > *:not(.done):not(.eyebrow) { display:none; } .card.isdone .done { display:block; }
+  .tellf { display:none; margin-top: 14px; border:1px solid #3a3d44; border-radius: 14px; padding: 14px 18px; font-size: 26px; color:#fff; align-items:center; gap: 14px; }
+  .card.tell .tellf { display:flex; } .card.tell .line, .card.tell .why, .card.tell .pills { display:none; }
+  .mic { width: 18px; height: 18px; border-radius: 50%; background: #ff5a5f; box-shadow: 0 0 0 0 rgba(255,90,95,.6); animation: pulse 1s infinite; flex: none; }
+  @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255,90,95,.6); } 100% { box-shadow: 0 0 0 14px rgba(255,90,95,0); } }
+  .counter { position:absolute; left: 0; right: 0; bottom: 26px; font-size: 27px; color: var(--ink-2); display:flex; justify-content:center; gap: 12px; align-items:baseline; opacity:0; transform: translateY(6px); transition: opacity .25s var(--ease), transform .25s var(--ease); }
+  .counter.show { opacity:1; transform:none; }
+  .counter b { font-size: 34px; color: var(--ink); font-weight: 650; letter-spacing:-.02em; font-variant-numeric: tabular-nums; }
+  .counter b.was { color: var(--ink-3); text-decoration: line-through; font-weight: 500; }
+  .counter b.add { color: var(--accent-ink); }
+  .recall { position:absolute; left: 0; top: -60px; width: 100%; text-align:left; font-size: 24px; color: var(--ink-3); opacity:0; transition: opacity .25s var(--ease); }
+  .recall.show { opacity:1; }
+  .recall b { color: var(--ink-2); font-weight: 600; margin-right: 14px; }
+
+  .tag { position:absolute; left:0; bottom:30px; font-size:19px; color:var(--ink-3); letter-spacing:.01em; }
+  .tag i { display:inline-block; width:9px; height:9px; border-radius:50%; background:var(--accent); margin-right:9px; vertical-align:middle; font-style:normal; }
+
+  /* the pill in the corner */
+  #pillnod { position:absolute; right: 36px; bottom: 36px; background: rgba(20,21,24,.97); color:#fff; border-radius: 999px; padding: 12px 20px; font-size: 22px; display:flex; align-items:center; gap: 12px; box-shadow: 0 20px 60px -30px rgba(0,0,0,.6); opacity:0; transform: translateY(10px); transition: opacity .3s var(--ease), transform .3s var(--ease); z-index: 4; }
+  #pillnod.show { opacity:1; transform:none; }
+  #pillnod .face { color:#6fd3a3; font-weight: 600; }
+
+  /* memory */
+  .mem { position:absolute; left: 160px; right: 160px; top: 115px; height: auto; box-sizing:border-box; background:#fff; border:1px solid var(--line); border-radius: 26px; padding: 34px 40px; text-align:left; box-shadow: 0 40px 100px -60px rgba(0,0,0,.35); opacity:0; transition: opacity .25s var(--ease); display:flex; flex-direction:column; }
+  .mem.show { opacity:1; }
+  .mem .h { display:flex; justify-content:space-between; align-items:baseline; border-bottom:1px solid var(--line); padding-bottom: 18px; margin-bottom: 8px; }
+  .mem .h b { font-size: 30px; font-weight: 650; letter-spacing:-.02em; } .mem .h span { font-size: 20px; color: var(--ink-3); }
+  .fact { display:flex; justify-content:space-between; align-items:center; padding: 20px 6px; border-bottom:1px solid var(--line); font-size: 27px; color: var(--ink); opacity:0; transform: translateX(-10px); transition: opacity .25s var(--ease), transform .25s var(--ease); }
+  .fact.in { opacity:1; transform:none; }
+  .fact small { display:block; font-size: 19px; color: var(--ink-3); margin-top: 4px; }
+  .fact .ok { color: var(--accent-ink); font-weight: 600; font-size: 22px; white-space:nowrap; }
+  .fact .ok.st { color: var(--ink-3); font-weight: 500; transition: color .3s var(--ease); }
+  .fact .ok.st.held { color: var(--accent-ink); font-weight: 600; }
+  .fact .btns { display:flex; gap: 10px; } .fact .btns span { border:1px solid var(--line); border-radius: 999px; padding: 8px 16px; font-size: 20px; color: var(--ink-2); }
+  .fact .btns span.a { background: var(--accent); color:#fff; border-color: var(--accent); }
+
+  /* numbers */
+  .nums { display:grid; grid-template-columns: repeat(3, 440px); gap: 40px; margin-top: 10px; }
+  .nums b { display:block; font-size: 160px; font-weight: 700; letter-spacing:-.045em; line-height:1; font-variant-numeric: tabular-nums; }
+  .nums span { display:block; margin-top: 14px; font-size: 30px; color: var(--ink-2); }
+
+  #overlay { position:absolute; inset:0; display:grid; place-items:center; background: #fff; color: var(--ink-2); font-size: 26px; z-index: 5; cursor:default; }
+  #overlay small { display:block; color: var(--ink-3); font-size: 18px; margin-top: 12px; }
+  #progress { position:absolute; left:0; bottom:0; height: 4px; background: var(--accent); width: 0; opacity: 0; }
+  body.debug #progress { opacity: .6; }
+  .screen { transition: opacity .25s var(--ease), transform .3s var(--ease); }
+  .screen.away { opacity:0 !important; transform: translateX(-48px) scale(.97); }
+  .switcher { position:absolute; left:50%; top:280px; transform: translateX(-50%); display:flex; gap: 10px; padding: 14px; background: rgba(20,21,24,.94); border-radius: 24px; box-shadow: 0 40px 100px -40px rgba(0,0,0,.6); opacity:0; transition: opacity .16s var(--ease); z-index: 5; }
+  .switcher span { padding: 16px 30px; border-radius: 16px; font-size: 27px; font-weight: 600; color: #b9bec6; transition: background .12s, color .12s; }
+  .switcher span.hot { background: rgba(255,255,255,.18); color: #fff; }
+  .switcher.show { opacity:1; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="overlay"><div>Press space to play<small>R restarts · P shows a progress bar</small></div></div>
+
+  <!-- open -->
+  <div class="scene" data-k="open">
+    <div class="mark t"><span class="face">(•‿•)⌖</span>Nod</div>
+    <div class="sub t" style="font-size:40px;color:var(--ink);max-width:34ch">It remembers the decision you already made.</div>
+    <div class="sub t" style="font-size:26px;color:var(--ink-3);margin-top:12px">A menu bar app for the Mac. Every scene is recreated from eight days of real use.</div>
+  </div>
+
+  <!-- the handoff: decided in Grok, delivered in Claude, and what Claude does with it -->
+  <div class="scene" data-k="ctx">
+    <div class="feat">
+      <div class="tag"><i></i>recreated · Oct 31</div>
+      <div class="cap" id="c2">What you decided in Grok follows you into Claude.<small>Nod saw you switch apps and brought the decision along.</small></div>
+      <div class="screen show" id="s2a">
+        <div class="bar"><i></i><i></i><i></i></div>
+        <div class="who">Grok</div>
+        <div class="msg them show">Here are three hooks for the next reel. Want me to script one?</div>
+        <div class="msg me" id="s2decide">Make the reels a series of episodes about my predictions of the future. One-offs don't build an audience.</div>
+      </div>
+      <div class="screen dark" id="s2">
+        <div class="bar"><i></i><i></i><i></i></div>
+        <div class="who">Claude</div>
+        <div class="msg them show">Here's the reel with the new intro.</div>
+        <div class="msg me" id="s2sent">Edit this reel. <span style="color:var(--accent)">Context you may not have: I want the reels to be a series of episodes about my predictions of the future, because one-offs don't build an audience.</span></div>
+        <div class="msg them" id="s2reply">Got it, so this is episode 3 of the series. I'll open on last week's prediction, cut to this one, and end on a tease for episode 4.</div>
+        <div class="composer" id="s2comp"><span class="ph" id="s2ph">Message Claude</span><span id="s2typed"></span><span class="ctx" id="s2ctx">Context you may not have: I want the reels to be a series of episodes about my predictions of the future, because one-offs don't build an audience.</span></div>
+      </div>
+      <div class="switcher" id="sw2"><span id="swa" class="hot">Grok</span><span id="swb">Claude</span><span>Messages</span><span>Finder</span></div>
+      <div class="card" id="k2">
+        <div class="eyebrow"><b>(•‿•)⌖</b> say the word and I'll</div>
+        <div class="line">give Claude the context it's missing</div>
+        <div class="why">you decided this in Grok, not here</div>
+        <div class="pills"><span class="pill yes" id="k2y">Yes <kbd>⌘</kbd></span><span class="pill no">No <kbd>⌥</kbd></span><span class="pill">More <kbd>hold ⌘</kbd></span></div>
+      </div>
+      <div class="counter" id="ct2">you typed <b>3</b> words <span style="color:var(--ink-3)">·</span> Nod added <b class="add">27</b> <span style="color:var(--ink-3)">·</span> nothing re-explained</div>
+    </div>
+  </div>
+
+  <!-- the coding agent -->
+  <div class="scene" data-k="agent">
+    <div class="feat">
+      <div class="tag"><i></i>recreated · real feature</div>
+      <div class="cap" id="c3">Your agent asks. The answer is already written.</div>
+      <div class="screen show dark" id="s3" style="justify-content:flex-end">
+        <div class="bar"><i></i><i></i><i></i></div>
+        <div class="who">Terminal · Claude Code</div>
+        <div class="tl dim">✓ migration added, 14 tests pass</div>
+        <div class="tl" id="s3ask">What should I do next?</div>
+        <div class="tl green" id="s3typed"></div>
+      </div>
+      <div class="card" id="k3">
+        <div class="eyebrow"><b>(•‿•)⌖</b> say the word and I'll</div>
+        <div class="line">tell Claude to continue: ship it behind the flag, then update the changelog</div>
+        <div class="why">the way you answered the last three times</div>
+        <div class="pills"><span class="pill yes" id="k3y">Yes <kbd>⌘</kbd></span><span class="pill no">No <kbd>⌥</kbd></span><span class="pill">More <kbd>hold ⌘</kbd></span></div>
+      </div>
+      <div class="counter" id="ct3">you typed <b>0</b> words <span style="color:var(--ink-3)">·</span> the agent kept going</div>
+    </div>
+  </div>
+
+  <!-- correction, then what the answers changed -->
+  <div class="scene" data-k="learn">
+    <div class="feat">
+      <div class="tag" id="tg4"><i></i>recreated · real feature</div>
+      <div class="cap" id="c4">Wrong guess? Your correction is a label.<small>Refuse a line enough and it waits for ⌘ instead of interrupting.</small></div>
+      <div class="screen show mail" id="s4">
+        <div class="bar"><i></i><i></i><i></i></div>
+        <div class="who">Mail</div>
+        <div class="hdr"><b>Tony Reyes</b> · to you<br>Re: intro call</div>
+        <div class="body">Great to meet you. Could do Wednesday 4pm or Thursday 10am for the call, whichever is easier.
+
+Tony</div>
+      </div>
+      <div class="card" id="k4">
+        <div class="eyebrow"><b>(•‿•)⌖</b> say the word and I'll</div>
+        <div class="line">reply to Tony: Thursday 10 works</div>
+        <div class="why">you keep Wednesday afternoons free</div>
+        <div class="pills"><span class="pill yes" id="k4y">Yes <kbd>⌘</kbd></span><span class="pill no" id="k4n">No <kbd>⌥</kbd></span><span class="pill" id="k4m">More <kbd>hold ⌘</kbd></span></div>
+        <ul class="ideas">
+          <li id="i1">reply to Tony: Wednesday 4pm works <kbd>1</kbd></li>
+          <li id="i2">add Thursday's call with Tony to your calendar <kbd>2</kbd></li>
+          <li id="i3">ask Tony for a 15 minute slot instead <kbd>3</kbd></li>
+          <li id="i4">forward the thread to Sam <kbd>4</kbd></li>
+        </ul>
+        <div class="done">added to Calendar<b>Thu 10:00 · Call with Tony · ⌘Z undoes</b></div>
+      </div>
+      <div class="mem" id="m8">
+        <div class="h"><b>What your answers changed</b><span>1,358 answers · Oct 26 to Nov 2 · stored on this Mac</span></div>
+        <div class="fact"><div>“Reply to Grok” in Grok<small>offered 48 times · taken 5</small></div><span class="ok st">on the card</span></div>
+        <div class="fact"><div>“Draft a message…” in Claude<small>offered 22 times · taken 0</small></div><span class="ok st">on the card</span></div>
+        <div class="fact"><div>“Take this to Claude…” in Dia<small>offered 25 times · taken 1</small></div><span class="ok st">on the card</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- numbers -->
+  <div class="scene" data-k="nums">
+    <div class="kicker t">Eight days, one user</div>
+    <div class="nums">
+      <div class="t"><b id="q1" data-n="149">0</b><span>nods that ran</span></div>
+      <div class="t"><b id="q2" data-n="92">0</b><span>messages written</span></div>
+      <div class="t"><b id="q3" data-n="1358">0</b><span>answers it learned from</span></div>
+    </div>
+    <div class="sub t" id="nobody" style="font-size:34px;margin-top:70px;color:var(--ink);max-width:60ch">Stored on the Mac.<br>A model sees only redacted text.</div>
+  </div>
+
+  <!-- close -->
+  <div class="scene" data-k="close">
+    <div class="mark t"><span class="face">(•‿•)⌖</span>Nod</div>
+    <div class="sub t" style="font-size:40px;color:var(--ink);max-width:30ch">Your prompt is already filled. You just nod.</div>
+    <div class="sub t" style="font-size:26px;color:var(--ink-3);margin-top:40px">maradimo.github.io/22labs/nod</div>
+  </div>
+
+  <div id="pillnod"><span class="face">(•‿•)⌖</span>Nod</div>
+  <div id="progress"></div>
+</div>
+
+<script>
+  const stage = document.getElementById('stage');
+  function fit() { const s = Math.min(innerWidth / 1920, innerHeight / 1080); stage.style.transform = `translate(${-960 * s}px, ${-540 * s}px) scale(${s})`; }
+  addEventListener('resize', fit); fit();
+  const scenes = [...document.querySelectorAll('.scene')];
+  // Scene order and lengths. Starts are summed from here so a scene can grow without retiming the rest.
+  const ORDER = [['open', 13], ['ctx', 17.5], ['agent', 8], ['learn', 15], ['nums', 12], ['close', 7]];
+  const T = {}, DUR = {}; let acc = 0; ORDER.forEach(([k, d]) => { T[k] = acc; DUR[k] = d; acc += d; });
+  const TOTAL = acc; window.NOD_T = T; window.NOD_DUR = DUR; window.NOD_TOTAL = TOTAL;
+  let timers = [], t0 = 0, raf = 0;
+  const at = (sec, fn) => timers.push(setTimeout(fn, sec * 1000));
+  const $ = id => document.getElementById(id);
+  const show = id => $(id).classList.add('show'), hide = id => $(id).classList.remove('show');
+  // ⌘ on a card: the pill presses, the card flashes green.
+  const press = (card, pill, when) => { at(when, () => { $(pill).classList.add('press'); $(card).classList.add('flashy'); }); at(when + 0.15, () => $(pill).classList.remove('press')); };
+  const type = (id, text, start, step) => { for (let i = 1; i <= text.length; i++) at(start + i * step, () => { $(id).textContent = text.slice(0, i); }); };
+
+  function reset() {
+    timers.forEach(clearTimeout); timers = []; cancelAnimationFrame(raf);
+    scenes.forEach(s => { s.classList.remove('on', 'off'); s.querySelectorAll('.t, .fact').forEach(e => e.classList.remove('in')); });
+    document.querySelectorAll('.card, .cap, .counter, .ctx, .toast, .mem, #pillnod').forEach(e => e.classList.remove('show', 'flashy', 'more', 'isdone', 'full'));
+    document.querySelectorAll('.msg:not(.them.show)').forEach(e => e.classList.remove('show'));
+    document.querySelectorAll('.pill').forEach(p => p.classList.remove('press'));
+    document.querySelectorAll('.ideas li').forEach(l => l.classList.remove('hot'));
+    document.querySelectorAll('.screen').forEach(e => e.classList.remove('away'));
+    ['q1','q2','q3'].forEach(id => $(id).textContent = '0');
+    document.querySelectorAll('.fact .st').forEach(e => { e.textContent = 'on the card'; e.classList.remove('held'); });
+    $('s2typed').textContent = ''; $('s2ph').style.opacity = 1; hide('s2'); hide('sw2'); $('s2a').classList.add('show'); $('swa').classList.add('hot'); $('swb').classList.remove('hot'); $('s2comp').style.opacity = 1;
+    $('s3typed').textContent = ''; $('s3typed').classList.remove('show'); $('s3ask').classList.remove('show');
+    $('s4').classList.add('show');
+    $('progress').style.width = '0';
+  }
+
+  function play() {
+    reset();
+    $('overlay').style.display = 'none';
+    t0 = performance.now();
+    (function tick() { const p = Math.min(1, (performance.now() - t0) / 1000 / TOTAL); $('progress').style.width = (p * 100) + '%'; if (p < 1) raf = requestAnimationFrame(tick); })();
+    scenes.forEach(s => {
+      const start = T[s.dataset.k], dur = DUR[s.dataset.k];
+      at(start, () => { s.classList.add('on'); s.querySelectorAll('.t').forEach((e, i) => at(0.05 + i * 0.4, () => e.classList.add('in'))); });
+      at(start + dur - 0.25, () => s.classList.add('off'));
+    });
+    // Every feature scene opens on its caption alone; the action starts once it has been read.
+    [['ctx','c2'],['agent','c3'],['learn','c4']].forEach(([k, c]) => at(T[k] + 0.3, () => show(c)));
+    const full = (c, when) => at(when, () => $(c).classList.add('full'));
+
+    // open: the pill arrives.
+    at(2.4, () => show('pillnod'));
+
+    // handoff: decided in Grok, switch apps, the context arrives in Claude, Claude uses it.
+    let S = T.ctx;
+    at(S + 1.2, () => show('s2decide'));
+    at(S + 3.2, () => show('sw2'));
+    at(S + 3.7, () => { $('swa').classList.remove('hot'); $('swb').classList.add('hot'); });
+    at(S + 4.3, () => { hide('sw2'); $('s2a').classList.add('away'); show('s2'); });
+    at(S + 5.3, () => { $('s2ph').style.opacity = 0; });
+    type('s2typed', 'Edit this reel.', S + 5.3, 0.045);
+    at(S + 6.4, () => { hide('pillnod'); show('k2'); });
+    press('k2', 'k2y', S + 8.8);
+    at(S + 9.1, () => show('s2ctx'));
+    at(S + 10.0, () => hide('k2'));
+    at(S + 10.2, () => show('ct2')); full('c2', S + 10.2);
+    // sent: the composer empties and the message, context included, sits in the thread; Claude answers in kind.
+    at(S + 11.6, () => { $('s2comp').style.opacity = 0; show('s2sent'); });
+    at(S + 13.4, () => show('s2reply'));
+    at(S + 14.0, () => show('pillnod'));
+
+    // agent: it asks what's next.
+    S = T.agent;
+    at(S + 1.8, () => show('s3ask'));
+    at(S + 2.6, () => { hide('pillnod'); show('k3'); });
+    press('k3', 'k3y', S + 5.2);
+    at(S + 5.5, () => { $('s3typed').textContent = '› ship it behind the flag, then update the changelog'; show('s3typed'); });
+    at(S + 6.4, () => hide('k3'));
+    at(S + 6.6, () => show('ct3'));
+    at(S + 7.2, () => show('pillnod'));
+
+    // learn: No, then More, the pick is a label; then the lines the answers already changed.
+    S = T.learn;
+    at(S + 1.3, () => { hide('pillnod'); show('k4'); });
+    at(S + 3.3, () => $('k4n').classList.add('press'));
+    at(S + 3.45, () => { $('k4n').classList.remove('press'); $('k4').classList.add('more'); $('i1').classList.add('hot'); });
+    at(S + 4.8, () => $('k4m').classList.add('press'));
+    at(S + 5.4, () => { $('i1').classList.remove('hot'); $('i2').classList.add('hot'); });
+    at(S + 6.2, () => { $('k4m').classList.remove('press'); $('k4').classList.add('flashy'); });
+    at(S + 6.5, () => { $('k4').classList.remove('more'); $('k4').classList.add('isdone'); });
+    at(S + 8.6, () => { hide('k4'); $('s4').classList.add('away'); });
+    at(S + 9.0, () => { show('m8'); $('tg4').innerHTML = '<i></i>real numbers · Oct 26 to Nov 2'; });
+    document.querySelectorAll('.fact').forEach((f, i) => at(S + 9.4 + i * 0.45, () => f.classList.add('in')));
+    document.querySelectorAll('.fact .st').forEach((e, i) => at(S + 12.4 + i * 0.35, () => { e.textContent = 'waits for ⌘ now'; e.classList.add('held'); }));
+    full('c4', S + 13.4);
+    at(S + 14.2, () => show('pillnod'));
+
+    // numbers count.
+    S = T.nums;
+    const count = (id, delay) => at(S + delay, () => { const el = $(id), to = +el.dataset.n, c0 = performance.now();
+      (function step() { const p = Math.min(1, (performance.now() - c0) / 900), k = 1 - Math.pow(1 - p, 3); el.textContent = Math.round(to * k).toLocaleString('en-US'); if (p < 1) requestAnimationFrame(step); })(); });
+    count('q1', 0.5); count('q2', 1.0); count('q3', 1.5);
+    at(S + 0.2, () => hide('pillnod'));
+  }
+  addEventListener('keydown', e => {
+    if (e.code === 'Space') { e.preventDefault(); play(); }
+    if (e.key === 'r' || e.key === 'R') play();
+    if (e.key === 'p' || e.key === 'P') document.body.classList.toggle('debug');
+  });
+  $('overlay').addEventListener('click', play);
+</script>
+</body>
+</html>
